@@ -1,0 +1,6 @@
+{
+  "name": "YABBAI — Solana Control Panel, Launch Pad & Boost Portal",
+  "description": "Mainstream Solana token gainer tracker, AI sentiment engine, developer launch pad, visibility boost portal, multi-chain trade desk, and network announcements hub.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

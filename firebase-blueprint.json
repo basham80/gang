@@ -1,0 +1,719 @@
+{
+  "entities": {
+    "Token": {
+      "title": "Solana Token",
+      "description": "Persisted SPL token launched or boosted on the YABBAI Solana Control Panel.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "visibility": {
+          "type": "string",
+          "enum": ["public"]
+        },
+        "address": {
+          "type": "string",
+          "minLength": 12,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9]+$"
+        },
+        "symbol": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 12,
+          "pattern": "^[A-Z0-9]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 48
+        },
+        "category": {
+          "type": "string",
+          "enum": ["DeFi", "Infrastructure", "Meme", "AI", "LST", "Community"]
+        },
+        "priceUsd": {
+          "type": "number"
+        },
+        "change5m": {
+          "type": "number"
+        },
+        "change1h": {
+          "type": "number"
+        },
+        "change24h": {
+          "type": "number"
+        },
+        "volume24h": {
+          "type": "number"
+        },
+        "liquidityUsd": {
+          "type": "number"
+        },
+        "marketCap": {
+          "type": "number"
+        },
+        "holders": {
+          "type": "number"
+        },
+        "ageHours": {
+          "type": "number"
+        },
+        "boostMultiplier": {
+          "type": "number"
+        },
+        "boostTier": {
+          "type": "string",
+          "enum": ["none", "pulse_10x", "surge_50x", "apex_100x"]
+        },
+        "verifiedDev": {
+          "type": "boolean"
+        },
+        "security": {
+          "type": "object"
+        },
+        "sparkline": {
+          "type": "array"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 500
+        },
+        "decimals": {
+          "type": "number"
+        },
+        "totalSupply": {
+          "type": "number"
+        },
+        "imageUrl": {
+          "type": "string",
+          "maxLength": 70000
+        },
+        "creatorName": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "creatorWebsite": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "website": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "twitter": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "telegram": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "discord": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "launchedByUser": {
+          "type": "boolean"
+        },
+        "dexSource": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "pairAddress": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "dexUrl": {
+          "type": "string",
+          "maxLength": 240
+        },
+        "txSignature": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "cluster": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "visibility",
+        "address",
+        "symbol",
+        "name",
+        "category",
+        "priceUsd",
+        "change5m",
+        "change1h",
+        "change24h",
+        "volume24h",
+        "liquidityUsd",
+        "marketCap",
+        "holders",
+        "ageHours",
+        "boostMultiplier",
+        "boostTier",
+        "verifiedDev",
+        "security",
+        "sparkline",
+        "description",
+        "decimals",
+        "totalSupply",
+        "launchedByUser",
+        "dexSource",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Announcement": {
+      "title": "Network Announcement",
+      "description": "Verified Solana network broadcast for launches, boosts, liquidity pools, and protocol updates.",
+      "type": "object",
+      "properties": {
+        "authorUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "visibility": {
+          "type": "string",
+          "enum": ["public"]
+        },
+        "category": {
+          "type": "string",
+          "enum": ["Launch", "Boost", "Network", "Security"]
+        },
+        "title": {
+          "type": "string",
+          "minLength": 6,
+          "maxLength": 140
+        },
+        "body": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 800
+        },
+        "tokenSymbol": {
+          "type": "string",
+          "maxLength": 12
+        },
+        "author": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "walletAddress": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 64
+        },
+        "verified": {
+          "type": "boolean"
+        },
+        "upvotes": {
+          "type": "number"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "authorUid",
+        "visibility",
+        "category",
+        "title",
+        "body",
+        "author",
+        "walletAddress",
+        "verified",
+        "upvotes",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "XSignal": {
+      "title": "X Tracker Signal",
+      "description": "Persisted live X account and Solana cashtag tracker watch.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "visibility": {
+          "type": "string",
+          "enum": ["public"]
+        },
+        "handle": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 40
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 48
+        },
+        "verified": {
+          "type": "boolean"
+        },
+        "followersLabel": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32
+        },
+        "cashtag": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 12
+        },
+        "tokenName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 48
+        },
+        "content": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 400
+        },
+        "sentiment": {
+          "type": "string",
+          "enum": ["Bullish", "Neutral", "Alert"]
+        },
+        "likes": {
+          "type": "number"
+        },
+        "reposts": {
+          "type": "number"
+        },
+        "mentionsVelocity": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 48
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "visibility",
+        "handle",
+        "displayName",
+        "verified",
+        "followersLabel",
+        "cashtag",
+        "tokenName",
+        "content",
+        "sentiment",
+        "likes",
+        "reposts",
+        "mentionsVelocity",
+        "createdAt"
+      ]
+    },
+    "WalletAccount": {
+      "title": "User Multi-Chain Wallet Ledger",
+      "description": "Private persistent wallet balances and cluster configuration per authenticated user.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "provider": {
+          "type": "string",
+          "enum": ["phantom", "solflare", "backpack", "metamask", "keypair", "watch", "sandbox"]
+        },
+        "providerLabel": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 48
+        },
+        "address": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 64
+        },
+        "shortAddress": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 24
+        },
+        "network": {
+          "type": "string",
+          "enum": ["Mainnet-Beta", "Devnet"]
+        },
+        "balances": {
+          "type": "object"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "provider",
+        "providerLabel",
+        "address",
+        "shortAddress",
+        "network",
+        "balances",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "LiquidityPool": {
+      "title": "User Liquidity Pool",
+      "description": "Private Raydium or Meteora AMM liquidity pool managed by the authenticated user.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "dex": {
+          "type": "string",
+          "enum": ["Raydium", "Meteora"]
+        },
+        "tokenAddress": {
+          "type": "string",
+          "minLength": 12,
+          "maxLength": 64
+        },
+        "tokenSymbol": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 12
+        },
+        "tokenName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 48
+        },
+        "quoteSymbol": {
+          "type": "string",
+          "enum": ["SOL", "USDC"]
+        },
+        "baseAmount": {
+          "type": "number"
+        },
+        "quoteAmount": {
+          "type": "number"
+        },
+        "initialPriceUsd": {
+          "type": "number"
+        },
+        "tvlUsd": {
+          "type": "number"
+        },
+        "feeTierPct": {
+          "type": "number"
+        },
+        "lpTokens": {
+          "type": "number"
+        },
+        "lpLockedLabel": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 48
+        },
+        "lpBurned": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "dex",
+        "tokenAddress",
+        "tokenSymbol",
+        "tokenName",
+        "quoteSymbol",
+        "baseAmount",
+        "quoteAmount",
+        "initialPriceUsd",
+        "tvlUsd",
+        "feeTierPct",
+        "lpTokens",
+        "lpLockedLabel",
+        "lpBurned",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Transaction": {
+      "title": "Immutable Ledger Transaction",
+      "description": "Persisted audit receipt for swaps, token launches, boosts, pool deployments, LP burns, withdrawals, and top-ups.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "txType": {
+          "type": "string",
+          "enum": ["SWAP", "LAUNCH", "BOOST", "POOL_CREATE", "POOL_BURN", "POOL_REMOVE", "TOP_UP", "TRANSFER", "WITHDRAW", "BURN", "AIRDROP"]
+        },
+        "fromChain": {
+          "type": "string",
+          "enum": ["solana", "ethereum", "base", "arbitrum"]
+        },
+        "toChain": {
+          "type": "string",
+          "enum": ["solana", "ethereum", "base", "arbitrum"]
+        },
+        "fromSymbol": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20
+        },
+        "toSymbol": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20
+        },
+        "fromAmount": {
+          "type": "number"
+        },
+        "toAmount": {
+          "type": "number"
+        },
+        "feeSol": {
+          "type": "number"
+        },
+        "priceImpactPct": {
+          "type": "number"
+        },
+        "routeProvider": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 240
+        },
+        "mevProtected": {
+          "type": "boolean"
+        },
+        "txHash": {
+          "type": "string",
+          "minLength": 12,
+          "maxLength": 88,
+          "pattern": "^[a-zA-Z0-9]+$"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Confirmed"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "txType",
+        "fromChain",
+        "toChain",
+        "fromSymbol",
+        "toSymbol",
+        "fromAmount",
+        "toAmount",
+        "feeSol",
+        "priceImpactPct",
+        "routeProvider",
+        "summary",
+        "mevProtected",
+        "txHash",
+        "status",
+        "createdAt"
+      ]
+    },
+    "AlertRule": {
+      "title": "Automated Alert Rule",
+      "description": "User-defined automated Solana price, momentum, or volume alert rule.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "tokenSymbol": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 12
+        },
+        "metric": {
+          "type": "string",
+          "enum": ["price_above", "price_below", "change1h_above", "volume_above"]
+        },
+        "threshold": {
+          "type": "number"
+        },
+        "active": {
+          "type": "boolean"
+        },
+        "triggeredCount": {
+          "type": "number"
+        },
+        "lastTriggeredAt": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "tokenSymbol",
+        "metric",
+        "threshold",
+        "active",
+        "triggeredCount",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "TriggeredAlert": {
+      "title": "Triggered Alert Log",
+      "description": "Persisted record of an alert rule crossing its threshold.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ruleId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "tokenSymbol": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 12
+        },
+        "message": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 240
+        },
+        "currentValue": {
+          "type": "number"
+        },
+        "acknowledged": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "ruleId",
+        "tokenSymbol",
+        "message",
+        "currentValue",
+        "acknowledged",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/tokens/{tokenId}": {
+      "schema": { "$ref": "#/entities/Token" },
+      "description": "Publicly visible persisted SPL tokens launched or boosted via YABBAI."
+    },
+    "/announcements/{announcementId}": {
+      "schema": { "$ref": "#/entities/Announcement" },
+      "description": "Publicly visible Solana Network Announcements feed."
+    },
+    "/xSignals/{signalId}": {
+      "schema": { "$ref": "#/entities/XSignal" },
+      "description": "Publicly visible X Social & Whale Tracker live watch feed."
+    },
+    "/users/{userId}/profile/{docId}": {
+      "schema": { "$ref": "#/entities/WalletAccount" },
+      "description": "Private persistent multi-chain wallet state and balances for the owner user."
+    },
+    "/users/{userId}/pools/{poolId}": {
+      "schema": { "$ref": "#/entities/LiquidityPool" },
+      "description": "Private Raydium and Meteora liquidity pools owned by the user."
+    },
+    "/users/{userId}/transactions/{txId}": {
+      "schema": { "$ref": "#/entities/Transaction" },
+      "description": "Private immutable ledger of every swap, launch, boost, pool, and top-up transaction."
+    },
+    "/users/{userId}/alertRules/{ruleId}": {
+      "schema": { "$ref": "#/entities/AlertRule" },
+      "description": "Private automated Solana alert rules owned by the user."
+    },
+    "/users/{userId}/triggeredAlerts/{alertId}": {
+      "schema": { "$ref": "#/entities/TriggeredAlert" },
+      "description": "Private triggered alert notifications owned by the user."
+    }
+  }
+}

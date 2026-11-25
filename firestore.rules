@@ -1,0 +1,538 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Pillar 4.1: Global Safety Net (Default Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Phase 3: Reusable Hardened Global Primitives
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isVerifiedUser() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isNonEmptyString(val, minLen, maxLen) {
+      return val is string && val.size() >= minLen && val.size() <= maxLen;
+    }
+
+    function isOptionalString(data, field, maxLen) {
+      return !(field in data) || (data[field] is string && data[field].size() <= maxLen);
+    }
+
+    // Entity Validation Blueprints (Anti-Update-Gap)
+    function isValidSecurityMap(sec) {
+      return sec is map
+        && sec.keys().hasAll(['mintRevoked', 'freezeRevoked', 'lpLockedMonths', 'metadataImmutable'])
+        && sec.keys().hasOnly(['mintRevoked', 'freezeRevoked', 'lpLockedMonths', 'metadataImmutable'])
+        && sec.mintRevoked is bool
+        && sec.freezeRevoked is bool
+        && sec.lpLockedMonths is number && sec.lpLockedMonths >= 0 && sec.lpLockedMonths <= 120
+        && sec.metadataImmutable is bool;
+    }
+
+    function isValidToken(data) {
+      return data.keys().hasAll([
+          'ownerId', 'visibility', 'address', 'symbol', 'name', 'category',
+          'priceUsd', 'change5m', 'change1h', 'change24h', 'volume24h',
+          'liquidityUsd', 'marketCap', 'holders', 'ageHours', 'boostMultiplier',
+          'boostTier', 'verifiedDev', 'security', 'sparkline', 'description',
+          'decimals', 'totalSupply', 'launchedByUser', 'dexSource',
+          'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'visibility', 'address', 'symbol', 'name', 'category',
+          'priceUsd', 'change5m', 'change1h', 'change24h', 'volume24h',
+          'liquidityUsd', 'marketCap', 'holders', 'ageHours', 'boostMultiplier',
+          'boostTier', 'verifiedDev', 'security', 'sparkline', 'description',
+          'decimals', 'totalSupply', 'imageUrl', 'creatorName', 'creatorWebsite',
+          'website', 'twitter', 'telegram', 'discord', 'launchedByUser',
+          'dexSource', 'pairAddress', 'dexUrl', 'txSignature', 'cluster',
+          'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.ownerId)
+        && data.visibility == 'public'
+        && isNonEmptyString(data.address, 32, 64) && data.address.matches('^[a-zA-Z0-9]+$')
+        && isNonEmptyString(data.symbol, 2, 12) && data.symbol.matches('^[A-Z0-9]+$')
+        && isNonEmptyString(data.name, 2, 48)
+        && data.category in ['DeFi', 'Infrastructure', 'Meme', 'AI', 'LST', 'Community']
+        && data.priceUsd is number && data.priceUsd >= 0
+        && data.change5m is number && data.change5m >= -100 && data.change5m <= 100000
+        && data.change1h is number && data.change1h >= -100 && data.change1h <= 100000
+        && data.change24h is number && data.change24h >= -100 && data.change24h <= 100000
+        && data.volume24h is number && data.volume24h >= 0
+        && data.liquidityUsd is number && data.liquidityUsd >= 0
+        && data.marketCap is number && data.marketCap >= 0
+        && data.holders is number && data.holders >= 0
+        && data.ageHours is number && data.ageHours >= 0
+        && data.boostMultiplier is number && data.boostMultiplier >= 1 && data.boostMultiplier <= 100
+        && data.boostTier in ['none', 'pulse_10x', 'surge_50x', 'apex_100x']
+        && data.verifiedDev is bool
+        && isValidSecurityMap(data.security)
+        && data.sparkline is list && data.sparkline.size() >= 2 && data.sparkline.size() <= 24 && data.sparkline[0] is number
+        && isNonEmptyString(data.description, 10, 500)
+        && data.decimals is number && data.decimals >= 0 && data.decimals <= 9
+        && data.totalSupply is number && data.totalSupply >= 1000 && data.totalSupply <= 1000000000000000
+        && isOptionalString(data, 'imageUrl', 70000)
+        && isOptionalString(data, 'creatorName', 64)
+        && isOptionalString(data, 'creatorWebsite', 200)
+        && isOptionalString(data, 'website', 200)
+        && isOptionalString(data, 'twitter', 200)
+        && isOptionalString(data, 'telegram', 200)
+        && isOptionalString(data, 'discord', 200)
+        && isOptionalString(data, 'pairAddress', 64)
+        && isOptionalString(data, 'dexUrl', 240)
+        && isOptionalString(data, 'txSignature', 100)
+        && isOptionalString(data, 'cluster', 20)
+        && data.launchedByUser is bool
+        && isNonEmptyString(data.dexSource, 2, 64)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidAnnouncement(data) {
+      return data.keys().hasAll([
+          'authorUid', 'visibility', 'category', 'title', 'body',
+          'author', 'walletAddress', 'verified', 'upvotes', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'authorUid', 'visibility', 'category', 'title', 'body', 'tokenSymbol',
+          'author', 'walletAddress', 'verified', 'upvotes', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.authorUid)
+        && data.visibility == 'public'
+        && data.category in ['Launch', 'Boost', 'Network', 'Security']
+        && isNonEmptyString(data.title, 6, 140)
+        && isNonEmptyString(data.body, 16, 800)
+        && isOptionalString(data, 'tokenSymbol', 12)
+        && isNonEmptyString(data.author, 1, 64)
+        && isNonEmptyString(data.walletAddress, 4, 64)
+        && data.verified is bool
+        && data.upvotes is number && data.upvotes >= 1 && data.upvotes <= 1000000
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidXSignal(data) {
+      return data.keys().hasAll([
+          'ownerId', 'visibility', 'handle', 'displayName', 'verified',
+          'followersLabel', 'cashtag', 'tokenName', 'content', 'sentiment',
+          'likes', 'reposts', 'mentionsVelocity', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'visibility', 'handle', 'displayName', 'verified',
+          'followersLabel', 'cashtag', 'tokenName', 'content', 'sentiment',
+          'likes', 'reposts', 'mentionsVelocity', 'createdAt'
+        ])
+        && isValidId(data.ownerId)
+        && data.visibility == 'public'
+        && isNonEmptyString(data.handle, 2, 40)
+        && isNonEmptyString(data.displayName, 1, 48)
+        && data.verified is bool
+        && isNonEmptyString(data.followersLabel, 1, 32)
+        && isNonEmptyString(data.cashtag, 1, 12)
+        && isNonEmptyString(data.tokenName, 1, 48)
+        && isNonEmptyString(data.content, 10, 400)
+        && data.sentiment in ['Bullish', 'Neutral', 'Alert']
+        && data.likes is number && data.likes >= 0
+        && data.reposts is number && data.reposts >= 0
+        && isNonEmptyString(data.mentionsVelocity, 1, 48)
+        && data.createdAt is timestamp;
+    }
+
+    function isValidWalletAccount(data, userId) {
+      return data.keys().hasAll([
+          'ownerId', 'provider', 'providerLabel', 'address', 'shortAddress',
+          'network', 'balances', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'provider', 'providerLabel', 'address', 'shortAddress',
+          'network', 'balances', 'createdAt', 'updatedAt'
+        ])
+        && data.ownerId == userId
+        && isValidId(data.ownerId)
+        && data.provider in ['phantom', 'solflare', 'backpack', 'metamask', 'keypair', 'watch', 'sandbox']
+        && isNonEmptyString(data.providerLabel, 1, 48)
+        && isNonEmptyString(data.address, 8, 64)
+        && isNonEmptyString(data.shortAddress, 5, 24)
+        && data.network in ['Mainnet-Beta', 'Devnet']
+        && data.balances is map
+        && data.balances.size() <= 40
+        && ('SOL' in data.balances)
+        && data.balances.SOL is number
+        && data.balances.SOL >= 0
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidLiquidityPool(data, userId) {
+      return data.keys().hasAll([
+          'ownerId', 'dex', 'tokenAddress', 'tokenSymbol', 'tokenName',
+          'quoteSymbol', 'baseAmount', 'quoteAmount', 'initialPriceUsd',
+          'tvlUsd', 'feeTierPct', 'lpTokens', 'lpLockedLabel', 'lpBurned',
+          'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'dex', 'tokenAddress', 'tokenSymbol', 'tokenName',
+          'quoteSymbol', 'baseAmount', 'quoteAmount', 'initialPriceUsd',
+          'tvlUsd', 'feeTierPct', 'lpTokens', 'lpLockedLabel', 'lpBurned',
+          'createdAt', 'updatedAt'
+        ])
+        && data.ownerId == userId
+        && isValidId(data.ownerId)
+        && data.dex in ['Raydium', 'Meteora']
+        && isNonEmptyString(data.tokenAddress, 12, 64)
+        && isNonEmptyString(data.tokenSymbol, 2, 12)
+        && isNonEmptyString(data.tokenName, 2, 48)
+        && data.quoteSymbol in ['SOL', 'USDC']
+        && data.baseAmount is number && data.baseAmount > 0
+        && data.quoteAmount is number && data.quoteAmount > 0
+        && data.initialPriceUsd is number && data.initialPriceUsd > 0
+        && data.tvlUsd is number && data.tvlUsd > 0
+        && data.feeTierPct is number && data.feeTierPct >= 0.01 && data.feeTierPct <= 5
+        && data.lpTokens is number && data.lpTokens > 0
+        && isNonEmptyString(data.lpLockedLabel, 2, 48)
+        && data.lpBurned is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidTransaction(data, userId) {
+      return data.keys().hasAll([
+          'ownerId', 'txType', 'fromChain', 'toChain', 'fromSymbol', 'toSymbol',
+          'fromAmount', 'toAmount', 'feeSol', 'priceImpactPct', 'routeProvider',
+          'summary', 'mevProtected', 'txHash', 'status', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'txType', 'fromChain', 'toChain', 'fromSymbol', 'toSymbol',
+          'fromAmount', 'toAmount', 'feeSol', 'priceImpactPct', 'routeProvider',
+          'summary', 'mevProtected', 'txHash', 'status', 'createdAt'
+        ])
+        && data.ownerId == userId
+        && isValidId(data.ownerId)
+        && data.txType in ['SWAP', 'LAUNCH', 'BOOST', 'POOL_CREATE', 'POOL_BURN', 'POOL_REMOVE', 'TOP_UP', 'TRANSFER', 'WITHDRAW', 'BURN', 'AIRDROP']
+        && data.fromChain in ['solana', 'ethereum', 'base', 'arbitrum']
+        && data.toChain in ['solana', 'ethereum', 'base', 'arbitrum']
+        && isNonEmptyString(data.fromSymbol, 1, 20)
+        && isNonEmptyString(data.toSymbol, 1, 20)
+        && data.fromAmount is number && data.fromAmount >= 0
+        && data.toAmount is number && data.toAmount >= 0
+        && data.feeSol is number && data.feeSol >= 0
+        && data.priceImpactPct is number && data.priceImpactPct >= 0 && data.priceImpactPct <= 100
+        && isNonEmptyString(data.routeProvider, 2, 64)
+        && isNonEmptyString(data.summary, 4, 240)
+        && data.mevProtected is bool
+        && isNonEmptyString(data.txHash, 12, 88) && data.txHash.matches('^[a-zA-Z0-9]+$')
+        && data.status == 'Confirmed'
+        && data.createdAt is timestamp;
+    }
+
+    function isValidAlertRule(data, userId) {
+      return data.keys().hasAll([
+          'ownerId', 'tokenSymbol', 'metric', 'threshold', 'active',
+          'triggeredCount', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'tokenSymbol', 'metric', 'threshold', 'active',
+          'triggeredCount', 'lastTriggeredAt', 'createdAt', 'updatedAt'
+        ])
+        && data.ownerId == userId
+        && isValidId(data.ownerId)
+        && isNonEmptyString(data.tokenSymbol, 2, 12)
+        && data.metric in ['price_above', 'price_below', 'change1h_above', 'volume_above']
+        && data.threshold is number
+        && data.active is bool
+        && data.triggeredCount is number && data.triggeredCount >= 0
+        && isOptionalString(data, 'lastTriggeredAt', 64)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidTriggeredAlert(data, userId) {
+      return data.keys().hasAll([
+          'ownerId', 'ruleId', 'tokenSymbol', 'message', 'currentValue',
+          'acknowledged', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'ruleId', 'tokenSymbol', 'message', 'currentValue',
+          'acknowledged', 'createdAt', 'updatedAt'
+        ])
+        && data.ownerId == userId
+        && isValidId(data.ownerId)
+        && isValidId(data.ruleId)
+        && isNonEmptyString(data.tokenSymbol, 2, 12)
+        && isNonEmptyString(data.message, 4, 240)
+        && data.currentValue is number
+        && data.acknowledged is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // 1. Public Solana Tokens Collection (Launched & Boosted SPL Registry)
+    match /tokens/{tokenId} {
+      allow get: if isValidId(tokenId) && existing().visibility == 'public';
+      allow list: if existing().visibility == 'public';
+
+      allow create: if isVerifiedUser()
+        && isValidId(tokenId)
+        && isValidToken(incoming())
+        && incoming().ownerId == request.auth.uid
+        && incoming().address == tokenId
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isVerifiedUser()
+        && isValidId(tokenId)
+        && isValidToken(incoming())
+        && incoming().ownerId == existing().ownerId
+        && incoming().address == existing().address
+        && incoming().symbol == existing().symbol
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          // Action: Boost token visibility (any verified user funding a boost campaign)
+          (
+            incoming().diff(existing()).affectedKeys().hasOnly(['boostMultiplier', 'boostTier', 'volume24h', 'updatedAt'])
+            && incoming().boostMultiplier >= existing().boostMultiplier
+            && incoming().volume24h >= existing().volume24h
+          )
+          // Action: Liquidity pool seeded for token
+          || (
+            incoming().diff(existing()).affectedKeys().hasOnly(['liquidityUsd', 'dexSource', 'updatedAt'])
+            && incoming().liquidityUsd >= existing().liquidityUsd
+          )
+        );
+
+      allow delete: if false;
+    }
+
+    // 2. Public Network Announcements Feed
+    match /announcements/{announcementId} {
+      allow get: if isValidId(announcementId) && existing().visibility == 'public';
+      allow list: if existing().visibility == 'public';
+
+      allow create: if isVerifiedUser()
+        && isValidId(announcementId)
+        && isValidAnnouncement(incoming())
+        && incoming().authorUid == request.auth.uid
+        && incoming().upvotes == 1
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isVerifiedUser()
+        && isValidId(announcementId)
+        && isValidAnnouncement(incoming())
+        && incoming().authorUid == existing().authorUid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          // Action: Upvote announcement (+1 strictly)
+          incoming().diff(existing()).affectedKeys().hasOnly(['upvotes', 'updatedAt'])
+          && incoming().upvotes == existing().upvotes + 1
+        );
+
+      allow delete: if isVerifiedUser()
+        && isValidId(announcementId)
+        && existing().authorUid == request.auth.uid;
+    }
+
+    // 3. Public X Social & Whale Tracker Feed
+    match /xSignals/{signalId} {
+      allow get: if isValidId(signalId) && existing().visibility == 'public';
+      allow list: if existing().visibility == 'public';
+
+      allow create: if isVerifiedUser()
+        && isValidId(signalId)
+        && isValidXSignal(incoming())
+        && incoming().ownerId == request.auth.uid
+        && incoming().createdAt == request.time;
+
+      allow update: if false;
+
+      allow delete: if isVerifiedUser()
+        && isValidId(signalId)
+        && existing().ownerId == request.auth.uid;
+    }
+
+    // 4. Private Per-User Subcollections (Strict Owner Isolation)
+    match /users/{userId} {
+      allow read, write: if false;
+
+      // 4a. Wallet Account & Multi-Chain Balances
+      match /profile/{docId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(docId);
+        allow list: if isOwner(userId) && existing().ownerId == request.auth.uid;
+
+        allow create: if isOwner(userId)
+          && isValidId(userId)
+          && docId == 'wallet'
+          && isValidWalletAccount(incoming(), userId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+
+        allow update: if isOwner(userId)
+          && isValidId(userId)
+          && docId == 'wallet'
+          && isValidWalletAccount(incoming(), userId)
+          && incoming().ownerId == existing().ownerId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && (
+            // Action: Ledger balance settlement after swap/launch/boost/pool/top-up
+            incoming().diff(existing()).affectedKeys().hasOnly(['balances', 'updatedAt'])
+            // Action: Switch Solana cluster or reconnect provider
+            || incoming().diff(existing()).affectedKeys().hasOnly(['network', 'updatedAt'])
+            || incoming().diff(existing()).affectedKeys().hasOnly(['provider', 'providerLabel', 'address', 'shortAddress', 'network', 'updatedAt'])
+          );
+
+        allow delete: if false;
+      }
+
+      // 4b. Private Liquidity Pools (Raydium & Meteora)
+      match /pools/{poolId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(poolId);
+        allow list: if isOwner(userId) && existing().ownerId == request.auth.uid;
+
+        allow create: if isOwner(userId)
+          && isValidId(userId)
+          && isValidId(poolId)
+          && isValidLiquidityPool(incoming(), userId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+
+        allow update: if isOwner(userId)
+          && isValidId(userId)
+          && isValidId(poolId)
+          && isValidLiquidityPool(incoming(), userId)
+          && incoming().ownerId == existing().ownerId
+          && incoming().dex == existing().dex
+          && incoming().tokenAddress == existing().tokenAddress
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          // Terminal State Lock: burned LP pools can never be modified again
+          && existing().lpBurned == false
+          && (
+            // Action: Burn LP tokens forever
+            (
+              incoming().diff(existing()).affectedKeys().hasOnly(['lpBurned', 'lpLockedLabel', 'updatedAt'])
+              && incoming().lpBurned == true
+              && incoming().lpLockedLabel == 'Burned Forever'
+            )
+            // Action: Partial liquidity withdrawal
+            || (
+              incoming().diff(existing()).affectedKeys().hasOnly(['baseAmount', 'quoteAmount', 'tvlUsd', 'lpTokens', 'updatedAt'])
+              && incoming().lpTokens < existing().lpTokens
+              && incoming().quoteAmount < existing().quoteAmount
+            )
+          );
+
+        allow delete: if isOwner(userId)
+          && isValidId(userId)
+          && isValidId(poolId)
+          && existing().ownerId == request.auth.uid
+          // Terminal State Lock: burned LP pools cannot be withdrawn/deleted
+          && existing().lpBurned == false;
+      }
+
+      // 4c. Private Immutable Transaction Ledger
+      match /transactions/{txId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(txId);
+        allow list: if isOwner(userId) && existing().ownerId == request.auth.uid;
+
+        allow create: if isOwner(userId)
+          && isValidId(userId)
+          && isValidId(txId)
+          && isValidTransaction(incoming(), userId)
+          && incoming().createdAt == request.time;
+
+        // Immutable ledger entries cannot be altered or deleted
+        allow update, delete: if false;
+      }
+
+      // 4d. Private Automated Alert Rules
+      match /alertRules/{ruleId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(ruleId);
+        allow list: if isOwner(userId) && existing().ownerId == request.auth.uid;
+
+        allow create: if isOwner(userId)
+          && isValidId(userId)
+          && isValidId(ruleId)
+          && isValidAlertRule(incoming(), userId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+
+        allow update: if isOwner(userId)
+          && isValidId(userId)
+          && isValidId(ruleId)
+          && isValidAlertRule(incoming(), userId)
+          && incoming().ownerId == existing().ownerId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && (
+            // Action: Toggle active status
+            incoming().diff(existing()).affectedKeys().hasOnly(['active', 'updatedAt'])
+            // Action: Record trigger execution count
+            || (
+              incoming().diff(existing()).affectedKeys().hasOnly(['triggeredCount', 'lastTriggeredAt', 'updatedAt'])
+              && incoming().triggeredCount >= existing().triggeredCount
+            )
+          );
+
+        allow delete: if isOwner(userId)
+          && isValidId(userId)
+          && isValidId(ruleId)
+          && existing().ownerId == request.auth.uid;
+      }
+
+      // 4e. Private Triggered Alert Notifications
+      match /triggeredAlerts/{alertId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(alertId);
+        allow list: if isOwner(userId) && existing().ownerId == request.auth.uid;
+
+        allow create: if isOwner(userId)
+          && isValidId(userId)
+          && isValidId(alertId)
+          && isValidTriggeredAlert(incoming(), userId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time
+          && exists(/databases/$(database)/documents/users/$(userId)/alertRules/$(incoming().ruleId));
+
+        allow update: if isOwner(userId)
+          && isValidId(userId)
+          && isValidId(alertId)
+          && isValidTriggeredAlert(incoming(), userId)
+          && incoming().ownerId == existing().ownerId
+          && incoming().ruleId == existing().ruleId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && existing().acknowledged == false
+          && incoming().diff(existing()).affectedKeys().hasOnly(['acknowledged', 'updatedAt'])
+          && incoming().acknowledged == true;
+
+        allow delete: if isOwner(userId)
+          && isValidId(userId)
+          && isValidId(alertId)
+          && existing().ownerId == request.auth.uid;
+      }
+    }
+  }
+}
